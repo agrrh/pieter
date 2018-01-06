@@ -67,6 +67,8 @@ async def repos_index(request):
         else:
             code = 200
             result = data['repos'][name]
+            
+    return response.json(result, status=code)
 
 @app.route("/repos/<repo_name>", methods=['GET', 'PUT', 'DELETE'])
 async def repo_actions(request, repo_name):

@@ -30,7 +30,7 @@ Start being proud.
 
 Still pile of crap, but with confetti now.
 
-- [ ] List scenarios when requesting `GET /repos/<repo_name>`
+- [x] List scenarios when requesting `GET /repos/<repo_name>`
 - [ ] Use `result = response.json()` instead of `code = ...; result = ...; return response.json(resuilt, status=code)`
 - [ ] Use some classes
 
