@@ -1,8 +1,0 @@
-- TESTS TESTS TESTS
-- Move repos out of `data.yml` and get rid of this file
-- List scenarios when `GET /repos/<repo_name>`
-- Use `result = response.json()` instead of `code = ...; result = ...; return response.json(resuilt, status=code)`
-- Add stdout/stderr streams
-- Use some lightweight storage (redis, etcd, ...)
-- Run jobs in containers?
-- Build UI
