@@ -5,3 +5,6 @@ data.yml
 
 scenario/*
 !scenario/.placeholder
+
+logs/*
+!logs/.placeholder
