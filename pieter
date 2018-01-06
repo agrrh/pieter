@@ -43,7 +43,7 @@ async def index(request):
 
         'PATCH /repos/<name>/<scenario>',   # Execute scenario
 
-        'POST /hooks/<repo>/<scenario>'     # Almost the same, execute scenario
+        'POST /hooks/<repo>/<scenario>',     # Almost the same, execute scenario
                                             # POST used for compability with VCS webhooks
                                             # Also, note 'hooks' part
 
@@ -68,29 +68,44 @@ async def repos_index(request):
             code = 200
             result = data['repos'][name]
 
-@app.route("/repos/<name>", methods=['GET', 'PUT', 'DELETE'])
-async def repo_actions(request, name):
-    if request.method == 'PUT':
+@app.route("/repos/<repo_name>", methods=['GET', 'PUT', 'DELETE'])
+async def repo_actions(request, repo_name):
+    repo_path = '/'.join(('scenario', repo_name))
+    data = data_load()
+
+    if request.method == 'GET':
+        if repo_name not in data['repos']:
+            code = 404
+            result = None
+        else:
+            if not os.path.isdir(repo_path):
+                childs = []
+            else:
+                childs = list(os.walk(repo_path))[0][1]
+            code = 200
+            result = dict(data['repos'][repo_name])
+            result.update({'scenario': childs})
+
+    elif request.method == 'PUT':
         if not request.json or 'source' not in request.json:
             code = 400
             result = {'example': {
                 'source': 'git@github.com/user/repo.git'
             }}
         else:
-            data = data_load()
             source = request.json['source']
 
-            repo_old = data['repos'][name] if name in data['repos'] else None
+            repo_old = data['repos'][repo_name] if repo_name in data['repos'] else None
 
             repo_new = {
-                'name': name,
+                'name': repo_name,
                 'source': source
             }
 
             if repo_new == repo_old:
                 code = 200
             else:
-                data['repos'][name] = repo_new
+                data['repos'][repo_name] = repo_new
                 data_save(data=data)
                 code = 201
 
@@ -100,19 +115,16 @@ async def repo_actions(request, name):
             }
 
     elif request.method == 'DELETE':
-        data = data_load()
-        name = request.json['name']
-
-        if name not in data['repos']:
+        if repo_name not in data['repos']:
             code = 404
             result = None
         else:
             code = 200
             result = {
-                'old': data['repos'][name],
+                'old': data['repos'][repo_name],
                 'new': None
             }
-            data['repos'].pop(name, None)
+            data['repos'].pop(repo_name, None)
             data_save(data=data)
 
     return response.json(result, status=code)
