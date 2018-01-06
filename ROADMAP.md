@@ -31,7 +31,7 @@ Start being proud.
 Still pile of crap, but with confetti now.
 
 - [x] List scenarios when requesting `GET /repos/<repo_name>`
-- [ ] Use `result = response.json()` instead of `code = ...; result = ...; return response.json(resuilt, status=code)`
+- [x] Use `result = response.json()` instead of `code = ...; result = ...; return response.json(resuilt, status=code)`
 - [ ] Use some classes
 - [ ] Create master branch
 
