@@ -142,7 +142,6 @@ class API(object):
                     job.scenario = scenario.name
                     job.load()
                     await job.execute(scenario.data)
-                    job.save()
 
                     result = response.json(job.dump(), status=201)
 
@@ -153,7 +152,7 @@ class API(object):
             job = Job(self.db)
             job.load(job_name)
             if request.method == 'GET':
-                if job.rc is None:
+                if job.state is None:
                     result = response.json(None, status=404)
                 else:
                     result = response.json(job.dump())

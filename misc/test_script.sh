@@ -2,5 +2,5 @@
 
 echo "Started: $(date +%s)"
 echo "Some payload here"
-sleep 2
+sleep 30
 echo "Done: $(date +%s)"

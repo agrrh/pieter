@@ -1,10 +1,8 @@
-FROM python:3-slim
+FROM python:3
 
 ADD . /code
 WORKDIR /code
 
-RUN apt-get update -qq
-RUN apt-get install gcc -y
 RUN pip install -r requirements.txt
 
 ENV PYTHONUNBUFFERED=1

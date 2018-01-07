@@ -9,6 +9,9 @@ class Job(object):
     def __init__(self, db, name=None):
         self.db = db
 
+        # Event loop
+        self.loop = None
+
         self.__build()
         self.name = str(uuid.uuid4())
 
@@ -24,19 +27,9 @@ class Job(object):
         self.stderr = None
         self.rc = None
 
-    async def execute(self, scenario_data):
-        self.state = 'running'
-        self.time_start = int(time.time())
-
-        job_home_path = '/'.join(('', 'tmp', self.name))
-        job_script_path = '/'.join((job_home_path, self.scenario))
-
-        os.mkdir(job_home_path, 0o755)
-        with open(job_script_path, 'w') as fp:
-            fp.write(scenario_data)
-        os.chmod(job_script_path, 0o755)
-
-        process = await asyncio.create_subprocess_exec(job_script_path, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    async def background(self, script_path):
+        """Run process in background."""
+        process = await asyncio.create_subprocess_exec(script_path, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         stdout, stderr = await process.communicate()
 
         self.time_done = int(time.time())
@@ -44,8 +37,24 @@ class Job(object):
         self.stderr = stderr.decode()
         self.rc = process.returncode
 
-        # FIXME uncomment following line if previous tasks runs in background
-        # self.save()
+    async def execute(self, scenario_data):
+        """Prepare and fire off a job."""
+        self.state = 'running'
+        self.time_start = int(time.time())
+
+        self.save()
+
+        job_home_path = '/'.join(('jobs', self.name))
+        job_script_path = '/'.join((job_home_path, self.scenario))
+
+        os.mkdir(job_home_path, 0o755)
+        with open(job_script_path, 'w') as fp:
+            fp.write(scenario_data)
+        os.chmod(job_script_path, 0o755)
+
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(self.background(job_script_path))
+        task.add_done_callback(self.save)
 
     def load(self, name=None):
         """Populate properties with values from DB."""
@@ -73,9 +82,9 @@ class Job(object):
 
         return True
 
-    def save(self):
+    def save(self, *args):
         """Write object to database."""
-        return self.db.update('job', self.name, self.dump())
+        return self.db.update('job', self.name, self.dump(), ttl=3600)
 
     def dump(self):
         """Provide object as dict."""

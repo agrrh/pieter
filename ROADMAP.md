@@ -10,12 +10,15 @@ I guess it's OK to mention project in my CV now.
 Making it awesome.
 
 - [ ] Build UI
-- [ ] Add stdout/stderr streams
+- [ ] Accept GitHub hooks
+- [ ] Stream stdout/stderr?
 
 ### 0.3
 
 Start being proud.
 
+- [ ] Write docs on production usage
+- [ ] Provide common recipes examples
 - [x] Use some lightweight storage (redis, etcd, ...)
 - [x] Move repos out of `data.yml` and get rid of this file
 - [ ] Start testing it

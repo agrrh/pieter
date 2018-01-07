@@ -10,7 +10,7 @@ services:
       - redis
 
   redis:
-    image: redis:alpine
+    image: redis:3-alpine
     volumes:
       - data:/data
 
