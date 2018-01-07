@@ -16,8 +16,8 @@ Making it awesome.
 
 Start being proud.
 
-- [ ] Move repos out of `data.yml` and get rid of this file
 - [ ] Use some lightweight storage (redis, etcd, ...)
+- [ ] Move repos out of `data.yml` and get rid of this file
 - [ ] Start testing it
 - [ ] Write a good readme
 
