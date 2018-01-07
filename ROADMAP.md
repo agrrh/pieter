@@ -17,6 +17,7 @@ Making it awesome.
 
 Start being proud.
 
+- [ ] Build UI prototype
 - [ ] Move examples to docs
 - [ ] Move installation ways to docs, leave easy one in readme
 - [ ] Provide common recipes examples
