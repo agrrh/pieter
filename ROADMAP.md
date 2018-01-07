@@ -1,28 +1,23 @@
-### 0.6
+### 0.5
 
 I guess it's OK to mention project in my CV now.
 
 - [ ] Run jobs in containers?
 - [ ] Master-workers model?
 
-### 0.5
+### 0.4
 
 Making it awesome.
 
 - [ ] Build UI
 - [ ] Add stdout/stderr streams
 
-### 0.4
-
-Now proud for sure.
-
-- [ ] Move repos out of `data.yml` and get rid of this file
-- [ ] Use some lightweight storage (redis, etcd, ...)
-
 ### 0.3
 
 Start being proud.
 
+- [ ] Move repos out of `data.yml` and get rid of this file
+- [ ] Use some lightweight storage (redis, etcd, ...)
 - [ ] Start testing it
 - [ ] Write a good readme
 
