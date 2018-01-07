@@ -2,13 +2,16 @@
 
 This is Pieter, a bear (yes, a bear) and a super-lightweight CI.
 
-One day I realized that number of great tools doesn't suit one simple idea: **to provide lightweight private CI**
+One day you could realize that number of great tools doesn't fully suit simple idea: to provide lightweight private CI.
 
 - [TeamCity](https://jetbrains.ru/products/teamcity/) and [Jenkins](https://jenkins-ci.org/) are way too heavy
 - [Travis](https://travis-ci.org/) not suitable when one needs privacy
 - [Drone](https://drone.io/) is container-oriented so sometimes an overhead
+- ...
 
-There are many other solutions, but it was hard to find one good enough to rapidly deploy and use in a minute or two. So meet the Pieter CI!
+There are many other solutions, but it was hard to find one good enough to rapidly deploy and use in a minute or two.
+
+So meet the Pieter CI!
 
 *Pieter pronounces more like St. Petersburg in short form, not like a person's name.*
 
@@ -20,19 +23,19 @@ There are many other solutions, but it was hard to find one good enough to rapid
 
 # Requirements
 
-- Python 3.5.2+
+- [Python](https://www.python.org/) 3.5.2+
 - API powered by [Sanic](https://github.com/channelcat/sanic)
 - [Redis](https://redis.io/) as a database
 
 # Installation
 
-There are few ready-to-go ways to run the Pieter:
+Some ways to run Pieter CI:
 
 ### Containers
 
 #### Easy way
 
-Containerized with [docker-compose](https://docs.docker.com/compose/)
+Using [docker-compose](https://docs.docker.com/compose/):
 
 ```
 docker-compose up
@@ -40,7 +43,7 @@ docker-compose up
 
 #### Flexible way
 
-Run in containers isolated in private network:
+Run as standalone containers isolated in private network:
 
 ```
 docker network create pieter
@@ -57,28 +60,14 @@ docker run -d --name pieter-ci \
     agrrh/pieter-ci:stable
 ```
 
-You could also customize env variables pointing API on which address/port to listen and where to seek for DB, these are defaults:
-
-```
-PIETER_DB_HOST=redis
-PIETER_DB_PORT=6379
-PIETER_API_HOST=0.0.0.0
-PIETER_API_PORT=8000
-```
-
-### Manual
+### Manual way
 
 Run locally for test purposes, development or containers-free setup:
 
 ```
 # First, run redis in your way of choice
 
-# source local.env
-export PIETER_DB_HOST=127.0.0.1
-export PIETER_DB_PORT=6379
-export PIETER_API_HOST=127.0.0.1
-export PIETER_API_PORT=8000
-
+source local.env
 ./pieter
 
 http http://127.0.0.1:8000/
@@ -90,63 +79,73 @@ All required libraries could be installed with:
 pip3 install -r requirements.txt
 ```
 
+# Configuraion
+
+You could customize env variables pointing API on which address/port to listen and where to seek for DB, these are defaults:
+
+```
+PIETER_DB_HOST=redis
+PIETER_DB_PORT=6379
+PIETER_API_HOST=0.0.0.0
+PIETER_API_PORT=8000
+```
+
 # API examples
 
 Those examples are using awesome [httpie](https://httpie.org/).
 
-Get repos list:
+### Repo lifecycle
+
+Repository is an object you want to interact with.
+
+This could be code repository to build application from or just a webpage to download on specific events.
+
+##### List repositories
 
 `http GET http://0.0.0.0:8000/repos`
 
-### Repo lifecycle
-
-Create:
+##### Create repository
 
 `http PUT http://0.0.0.0:8000/repos/pieter source=git@github.com:agrrh/pieter-ci.git`
 
-Examine:
+##### Examine repo
 
 `http GET http://0.0.0.0:8000/repos/pieter`
 
-Remove (wait, don't run it yet):
+##### Remove repo
 
 `http DELETE http://0.0.0.0:8000/repos/pieter`
 
 ### Scenario lifecycle
 
-Add new scenario (aka build):
+Scenario is some item related to "build" object. Set of rules which would be applied to repository when requested.
+
+##### Add scenario
 
 `http PUT http://0.0.0.0:8000/repos/pieter/build.sh < misc/test_script.sh`
 
-Check it contents:
+##### View scenario
 
 `http GET http://0.0.0.0:8000/repos/pieter/build.sh`
 
-Remove scenario (same, don't run it now):
+##### Remove scenario
 
 `http DELETE http://0.0.0.0:8000/repos/pieter/build.sh`
 
 ### Job lifecycle
 
-Run a job:
+##### Run a job
 
 `http PATCH http://0.0.0.0:8000/repos/pieter/build.sh`
 
-Check job status:
+##### Check job status
 
 `http GET http://0.0.0.0:8000/jobs/${JOB_ID}`
 
-Delete job info and artifacts:
+##### Delete a job
 
 `http DELETE http://0.0.0.0:8000/jobs/${JOB_ID}`
 
-### Cleanup
+# Credits
 
-Now feel free to delete test repo and everything:
-
-```
-http DELETE http://0.0.0.0:8000/repos/pieter
-# also removes child scenarios
-
-http DELETE http://0.0.0.0:8000/jobs/${JOB_ID}
-```
+- [Kirill K](https://github.com/agrrh) - author

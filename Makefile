@@ -9,3 +9,4 @@ build: clean
 
 publish: clean build
 	docker push agrrh/pieter-ci:dev
+	docker push agrrh/pieter-ci
