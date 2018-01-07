@@ -1,59 +1,46 @@
 import os
-import yaml
 
 from lib.scenario import Scenario
 
 
 class Repository(object):
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, db):
+        self.db = db
 
-        self.path = '/'.join(('scenario', self.name))
+        self.__build()
 
-        data_file = './data.yml'
-        data_file_exists = os.path.exists(data_file)
-        data = yaml.load(open(data_file))
-        repo_is_in_data_file = 'repos' in data and self.name in data['repos']
-
-        self.exists = True if (
-            data_file_exists and repo_is_in_data_file
-        ) else False
-
-        # TODO add source property here
-
+    def __build(self):
+        """Initialize properties."""
+        self.name = None
         self.source = None
+        self.scenarios = None
 
-        self.scenarios = list(os.walk(self.path))[0][1] \
-            if os.path.isdir(self.path) \
-            else []
+    def load(self, name=None):
+        """Populate properties with values from DB."""
+        if name and not self.db.exists('repo', name):
+            return False
 
-    def create(self, source):
-        self.source = source
+        data = self.db.read('repo', name or self.name)
 
-        data_file = './data.yml'
-        data = yaml.load(open(data_file))
-        data['repos'][self.name] = self.read()
-        with open(data_file, 'w') as fp:
-            fp.write(yaml.dump(data, default_flow_style=False))
-        self.exists = True
+        self.name = name or self.name
+        self.source = data['source']
+        self.scenarios = data['scenarios']  # TODO use redis lists?
 
-    def read(self):
+        return True
+
+    def save(self):
+        """Write object to database."""
+        return self.db.update('repo', self.name, self.dump())
+
+    def dump(self):
+        """Provide object as dict."""
         return {
             'name': self.name,
-            'path': self.path,
-            'exists': self.exists,
+            'source': self.source,
             'scenarios': self.scenarios
         }
 
-    update = create
-
     def delete(self):
-        data_file = './data.yml'
-        data = yaml.load(open(data_file))
-        data['repos'].pop(self.name, None)
-        for s in self.scenarios:
-            scenario = Scenario(self, s)
-            scenario.delete()
-        self.exists = False
-        with open(data_file, 'w') as fp:
-            fp.write(yaml.dump(data, default_flow_style=False))
+        """Remove from database and nullify values."""
+        self.db.delete('repo', self.name)
+        self.__build()

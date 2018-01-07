@@ -1,105 +1,98 @@
 import uuid
+import asyncio
 import subprocess
 import time
 import os
 
 
 class Job(object):
-    def __init__(self, name=None):
-        if name is None:
-            self.name = str(uuid.uuid4())
-        else:
-            self.name = name
+    def __init__(self, db, name=None):
+        self.db = db
 
-        self.log_path = 'logs/{}.out.log'.format(self.name)
-        self.err_path = 'logs/{}.err.log'.format(self.name)
-        self.log_fp = open(self.log_path, 'a')
-        self.err_fp = open(self.err_path, 'a')
+        self.__build()
+        self.name = str(uuid.uuid4())
 
-        self.state_path = 'logs/{}.state'.format(self.name)
-        self.state = None if not os.path.exists(self.state_path) else 'running'
+    def __build(self):
+        """Initialize properties."""
+        self.name = None
+        self.state = None
+        self.repo = None
+        self.scenario = None
+        self.time_start = None
+        self.time_done = None
+        self.stdout = None
+        self.stderr = None
+        self.rc = None
 
-        if name is None:
-            self.time_start = self._get_job_time_start()
-            self.time_done = None
-            self.duration = None
-            self.rc = None
-            self.log = None
-            self.err = None
-        else:
-            self.time_start = self._get_job_time_start(self.state_path)
-            self.rc, self.time_done = self._get_job_result()
-            self.duration = self.time_done - self.time_start if self.time_done else None
-            self.log = self._get_file_contents(self.log_path)
-            self.err = self._get_file_contents(self.err_path)
-
-    def _get_job_time_start(self, path=None):
-        if path and os.path.isfile(path):
-            data = int(os.path.getmtime(path))
-        else:
-            data = int(time.time())
-        return data
-
-    def _get_file_contents(self, path):
-        if os.path.isfile(path):
-            data = open(path, 'r').read()
-        else:
-            data = None
-        return data
-
-    def _get_job_result(self):
-        try:
-            data = open(self.state_path, 'r').read().strip()
-            rc, time_done = data.split(';')
-            rc = int(rc)
-            time_done = int(time_done)
-            self.state = 'done'
-        except:
-            rc = None
-            time_done = None
-        return rc, time_done
-
-    def create(self, scenario_path):
+    async def execute(self, scenario_data):
         self.state = 'running'
-        subprocess.Popen(
-            'bash job.sh {} {} {}'.format(self.name, scenario_path, self.state_path),
-            shell=True, stdout=self.log_fp, stderr=self.err_fp
-        )
+        self.time_start = int(time.time())
 
-    def read(self):
-        self.rc, self.time_done = self._get_job_result()
-        self.log = self._get_file_contents(self.log_path)
-        self.err = self._get_file_contents(self.err_path)
+        job_home_path = '/'.join(('', 'tmp', self.name))
+        job_script_path = '/'.join((job_home_path, self.scenario))
+
+        os.mkdir(job_home_path, 0o755)
+        with open(job_script_path, 'w') as fp:
+            fp.write(scenario_data)
+        os.chmod(job_script_path, 0o755)
+
+        process = await asyncio.create_subprocess_exec(job_script_path, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        stdout, stderr = await process.communicate()
+
+        self.time_done = int(time.time())
+        self.stdout = stdout.decode()
+        self.stderr = stderr.decode()
+        self.rc = process.returncode
+
+        # FIXME uncomment following line if previous tasks runs in background
+        # self.save()
+
+    def load(self, name=None):
+        """Populate properties with values from DB."""
+        if name and not self.db.exists('job', name or self.name):
+            return False
+
+        data = self.db.read('job', name or self.name)
+
+        if data:
+            self.name = name or self.name
+            self.state = data['state']
+            self.repo = data['repo'] or self.repo
+            self.scenario = data['scenario'] or self.scenario
+            self.time_start = data['time_start']
+            self.time_done = data['time_done']
+            self.stdout = data['stdout']
+            self.stderr = data['stderr']
+            self.rc = data['rc']
+
+        if self.rc is not None:
+            if self.rc == 0:
+                self.state = 'success'
+            else:
+                self.state = 'fail'
+
+        return True
+
+    def save(self):
+        """Write object to database."""
+        return self.db.update('job', self.name, self.dump())
+
+    def dump(self):
+        """Provide object as dict."""
         return {
             'name': self.name,
             'state': self.state,
+            'repo': self.repo,
+            'scenario': self.scenario,
             'time_start': self.time_start,
             'time_done': self.time_done,
-            'duration': self.duration,
-            'log_path': self.log_path,
-            'err_path': self.err_path,
-            'state_path': self.state_path,
-            'log': self.log,
-            'err': self.err,
+            'stdout': self.stdout,
+            'stderr': self.stderr,
             'rc': self.rc
         }
 
     def delete(self):
-        files = (
-            self.log_path,
-            self.err_path,
-            self.state_path
-        )
-        for f in files:
-            os.remove(f)
-
-        self.time_start = None
-        self.time_done = None
-        self.duration = None
-
-        self.log = None
-        self.err = None
-
-        self.rc = None
-
-        self.state = None
+        """Remove from database and nullify values."""
+        name_unique = '/'.join((self.repo, self.scenario, self.name))
+        self.db.delete('scenario', name_unique)
+        self.__build()

@@ -16,11 +16,11 @@ Making it awesome.
 
 Start being proud.
 
-- [ ] Use some lightweight storage (redis, etcd, ...)
-- [ ] Move repos out of `data.yml` and get rid of this file
+- [x] Use some lightweight storage (redis, etcd, ...)
+- [x] Move repos out of `data.yml` and get rid of this file
 - [ ] Start testing it
-- [ ] Write a good readme
-- [ ] Move job files to `jobs/` instead of `logs/`
+- [x] Write a good readme
+- [x] Move job files to `jobs/` instead of `logs/`
 
 ### 0.2
 

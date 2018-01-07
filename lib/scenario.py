@@ -2,37 +2,47 @@ import os
 
 
 class Scenario(object):
-    def __init__(self, repo, name):
-        self.repo = repo
+    def __init__(self, db):
+        self.db = db
+
+        self.__build()
+
+    def __build(self):
+        """Initialize properties."""
+        self.name = None
+        self.repo = None
+        self.data = None
+
+    def load(self, name=None, repo_name=None):
+        """Populate properties with values from DB."""
+        name_unique = '{}/{}'.format(repo_name, name or self.name)
+
+        if name and not self.db.exists('scenario', name_unique):
+            return False
+
+        data = self.db.read('scenario', name_unique)
 
         self.name = name
+        self.repo = data['repo']
+        self.data = data['data']
 
-        self.path = '/'.join(('scenario', self.repo.name, self.name))
-        self.exists = os.path.isfile(self.path)
-        self.data = open(self.path, 'r').read() if self.exists else None
+        return True
 
-    def create(self, data):
-        dir_path = os.path.dirname(self.path)
-        if not os.path.isdir(dir_path):
-            os.makedirs(dir_path, mode=0o750)
-        with open(self.path, 'wb') as fp:
-            fp.write(data)
-        os.chmod(self.path, 0o775)
-        self.data = data
-        self.exists = True
+    def save(self):
+        """Write object to database."""
+        name_unique = '{}/{}'.format(self.repo, self.name)
+        return self.db.update('scenario', name_unique, self.dump())
 
-    def read(self):
+    def dump(self):
+        """Provide object as dict."""
         return {
             'name': self.name,
-            'repo': self.repo.name,
-            'path': self.path,
-            'exists': self.exists,
+            'repo': self.repo,
             'data': self.data
         }
 
-    update = create
-
     def delete(self):
-        os.remove(self.path)
-        self.data = None
-        self.exists = False
+        """Remove from database and nullify values."""
+        name_unique = '{}/{}'.format(self.repo, self.name)
+        self.db.delete('scenario', name_unique)
+        self.__build()
