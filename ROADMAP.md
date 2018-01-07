@@ -17,7 +17,8 @@ Making it awesome.
 
 Start being proud.
 
-- [ ] Write docs on production usage
+- [ ] Move examples to docs
+- [ ] Move installation ways to docs, leave easy one in readme
 - [ ] Provide common recipes examples
 - [x] Use some lightweight storage (redis, etcd, ...)
 - [x] Move repos out of `data.yml` and get rid of this file
