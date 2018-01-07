@@ -4,10 +4,14 @@ import sys
 import os
 import subprocess
 import yaml
-import uuid
 
 from sanic import Sanic
 from sanic import response
+
+from lib.repository import Repository
+from lib.scenario import Scenario
+from lib.job import Job
+
 
 DATA_STRUCT = {
     'repos': {}
@@ -58,146 +62,84 @@ async def repos_index(request):
 
 @app.route("/repos/<repo_name>", methods=['GET', 'PUT', 'DELETE'])
 async def repo_actions(request, repo_name):
-    repo_path = '/'.join(('scenario', repo_name))
-    data = data_load()
+    repo = Repository(repo_name)
 
     if request.method == 'GET':
-        if repo_name not in data['repos']:
+        if not repo.exists:  # FIXME use classes
             result = response.json(None, status=404)
         else:
-            if not os.path.isdir(repo_path):
-                childs = []
-            else:
-                childs = list(os.walk(repo_path))[0][1]
-            result_data = dict(data['repos'][repo_name])
-            result_data.update({'scenario': childs})
-            result = response.json(result_data)
+            result = response.json(repo.read())
 
     elif request.method == 'PUT':
         if not request.json or 'source' not in request.json:
-            example = {'example': {
-                'source': 'git@github.com/user/repo.git'
-            }}
-            result = response.json(example, status=400)
+            result = response.json('Provide "source" with git URL', status=400)
         else:
             source = request.json['source']
 
-            repo_old = data['repos'][repo_name] if repo_name in data['repos'] else None
+            repo_old = repo.read()
+            repo.update(source)
+            repo_new = repo.read()
 
-            repo_new = {
-                'name': repo_name,
-                'source': source
-            }
+            code = 200 if repo_new == repo_old else 201
 
-            code = 200
-            if repo_new != repo_old:
-                data['repos'][repo_name] = repo_new
-                data_save(data=data)
-                code = 201
-
-            result = response.json({
-                'old': repo_old,
-                'new': repo_new
-            }, status=code)
+            result = response.json(repo_new, status=code)
 
     elif request.method == 'DELETE':
-        if repo_name not in data['repos']:
+        if not repo.exists:
             result = response.json(None, status=404)
         else:
-            result = response.json({
-                'old': data['repos'][repo_name],
-                'new': None
-            })
-            data['repos'].pop(repo_name, None)
-            data_save(data=data)
+            repo.delete()
+            result = response.json(repo.read())
 
     return result
 
 @app.route("/repos/<repo_name>/<scenario_name>", methods=['PUT', 'GET', 'DELETE', 'PATCH'])
 async def scenario_actions(request, repo_name, scenario_name):
-    scenario_path = '/'.join(('scenario', repo_name, scenario_name))
+    repo = Repository(repo_name)
+    scenario = Scenario(repo, scenario_name)
 
     if request.method == 'PUT':
-        scenario_body = request.body
-
-        if len(scenario_body) < 4 or len(scenario_body) > 10240:
+        if len(request.body) < 4 or len(request.body) > 10240:
             result = response.json('File size do not match sane limits', status=400)
         else:
-            os.makedirs(os.path.dirname(scenario_path), mode=0o750)
-            with open(scenario_path, 'wb') as fp:
-                fp.write(scenario_body)
-            os.chmod(scenario_path, 0o775)
-
-            result = response.json({
-                'repo_name': repo_name,
-                'scenario_name': scenario_name
-            }, status=201)
+            scenario.update(request.body)
+            result = response.json(scenario.read(), status=201)
 
     elif request.method == 'GET':
-        if not os.path.exists(scenario_path):
+        if not scenario.exists:
             result = response.json(None, status=404)
         else:
-            result = response.json(open(scenario_path, 'r').read())
+            result = response.json(scenario.read())
 
     elif request.method == 'DELETE':
-        if os.path.isfile(scenario_path):
-            os.remove(scenario_path)
-            result = response.json({
-                'repo_name': repo_name,
-                'scenario_name': scenario_name,
-                'state': 'removed'
-            })
+        if scenario.exists:
+            scenario.delete()
+            result = response.json(scenario.read())
         else:
             result = response.json(None, status=404)
 
     elif request.method == 'PATCH':
-        job_name = str(uuid.uuid4())
-        log_file = open('logs/{}.out.log'.format(job_name), 'a')
-        err_file = open('logs/{}.err.log'.format(job_name), 'a')
+        job = Job()
+        job.create(scenario.path)
 
-        subprocess.Popen(
-            'bash job.sh {} {}'.format(job_name, scenario_path),
-            shell=True, stdout=log_file, stderr=err_file
-        )
-
-        result = response.json({'job_name': job_name}, status=201)
+        result = response.json(job.read(), status=201)
 
     return result
 
 @app.route("/jobs/<job_name>", methods=['GET', 'DELETE'])
 async def job_actions(request, job_name):
+    job = Job(name=job_name)
     if request.method == 'GET':
-        if not os.path.isfile('logs/{}.out.log'.format(job_name)):
+        if job.rc is None:
             result = response.json(None, status=404)
         else:
-            job_result_path = 'logs/{}.result'.format(job_name)
-            job_done = True if os.path.isfile(job_result_path) else False
-            if job_done:
-                duration, rc = open(job_result_path, 'r').read().strip().split(';')
-                rc = int(rc)
-            else:
-                duration, rc = 0, None
-            stdout = open('logs/{}.out.log'.format(job_name), 'r').read()
-            stderr = open('logs/{}.err.log'.format(job_name), 'r').read()
-
-            result_data = {
-                'success': True if rc == 0 else False,
-                'running': not job_done,
-                'rc': rc,
-                'duraion': duration,
-                'stdout': stdout,
-                'stderr': stderr
-            }
-            result = response.json(result_data)
+            result = response.json(job.read())
     elif request.method == 'DELETE':
-        if not os.path.isfile('logs/{}.out.log'.format(job_name)):
+        if job.state is None:
             result = response.json(None, status=404)
         else:
-            for extension in ('out.log', 'err.log', 'result'):
-                file_path = 'logs/{}.{}'.format(job_name, extension)
-                if os.path.isfile(file_path):
-                    os.remove(file_path)
-            result = response.json(job_name)
+            job.delete()
+            result = response.json(job.read())
 
     return result
 
