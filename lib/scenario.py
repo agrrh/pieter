@@ -44,5 +44,6 @@ class Scenario(object):
     def delete(self):
         """Remove from database and nullify values."""
         name_unique = '{}/{}'.format(self.repo, self.name)
-        self.db.delete('scenario', name_unique)
+        result = self.db.delete('scenario', name_unique)
         self.__build()
+        return bool(result)

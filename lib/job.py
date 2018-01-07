@@ -6,11 +6,8 @@ import os
 
 
 class Job(object):
-    def __init__(self, db, name=None):
+    def __init__(self, db):
         self.db = db
-
-        # Event loop
-        self.loop = None
 
         self.__build()
         self.name = str(uuid.uuid4())
@@ -102,6 +99,6 @@ class Job(object):
 
     def delete(self):
         """Remove from database and nullify values."""
-        name_unique = '/'.join((self.repo, self.scenario, self.name))
-        self.db.delete('scenario', name_unique)
+        result = self.db.delete('job', self.name)
         self.__build()
+        return bool(result)

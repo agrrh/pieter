@@ -42,5 +42,6 @@ class Repository(object):
 
     def delete(self):
         """Remove from database and nullify values."""
-        self.db.delete('repo', self.name)
+        result = self.db.delete('repo', self.name)
         self.__build()
+        return bool(result)

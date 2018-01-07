@@ -32,4 +32,4 @@ class Database(object):
         return self.handler.exists(name)
 
     def list(self, pattern='*'):
-        return self.handler.keys(pattern=pattern)
+        return [k.decode() for k in self.handler.keys(pattern=pattern)]
