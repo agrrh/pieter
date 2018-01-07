@@ -20,6 +20,7 @@ Start being proud.
 - [ ] Move repos out of `data.yml` and get rid of this file
 - [ ] Start testing it
 - [ ] Write a good readme
+- [ ] Move job files to `jobs/` instead of `logs/`
 
 ### 0.2
 
