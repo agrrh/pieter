@@ -13,7 +13,7 @@ REPO.save()
 SCENARIO = Scenario(DB)
 SCENARIO.name = 'random_scenario'
 SCENARIO.repo = REPO.name
-SCENARIO.data = '#!/bin/bash\nsleep 2\necho done'
+SCENARIO.data = '#!/bin/bash\nsleep 1\necho done'
 SCENARIO.save()
 
 JOB = Job(DB)
@@ -36,6 +36,8 @@ def test_load_present():
 def test_dump():
     result = JOB.dump()
     assert_equals(type(result), dict)
+
+# TODO test execution
 
 def test_delete():
     JOB.save()
