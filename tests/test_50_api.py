@@ -56,6 +56,28 @@ def test_scenario_get_present():
     result = requests.get(API_URL + 'repos/' + REPO_NAME + '/scenario1')
     assert_equals(type(result.json()), dict)
 
+def test_job_start_manual():
+    result = requests.patch(API_URL + 'repos/' + REPO_NAME + '/scenario1')
+    assert_equals(result.status_code, 201)
+
+def test_job_latest_name():
+    result = requests.patch(API_URL + 'repos/' + REPO_NAME + '/scenario1')
+    latest_job_name = result.json()['name']
+    result = requests.get(API_URL + 'repos/' + REPO_NAME + '/scenario1')
+    assert_equals(result.json()['latest_job'], latest_job_name)
+
+def test_job_latest_link():
+    result = requests.get(API_URL + 'repos/' + REPO_NAME + '/scenario1')
+    latest_job_name = result.json()['latest_job']
+    result = requests.get(API_URL + 'repos/' + REPO_NAME + '/scenario1/jobs/latest')
+    assert_equals(result.json()['name'], latest_job_name)
+
+def test_job_delete():
+    result = requests.get(API_URL + 'repos/' + REPO_NAME + '/scenario1')
+    latest_job_name = result.json()['latest_job']
+    result = requests.delete(API_URL + 'jobs/' + latest_job_name)
+    assert_equals(result.status_code, 200)
+
 def test_scenario_mentioned_in_repo():
     repo = requests.get(API_URL + 'repos/' + REPO_NAME)
     result = 'scenario1' in repo.json()['scenarios']
