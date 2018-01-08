@@ -16,6 +16,7 @@ class Webhook(object):
 
     def dump(self):
         data = {
+            'repo': self.repo,
             'ref': self.ref,
             'branch': self.branch,
             'commit': self.commit,
