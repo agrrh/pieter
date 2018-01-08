@@ -187,21 +187,23 @@ class API(object):
 
             if is_github or is_gitlab:
                 event = request.headers['X-GitHub-Event'] or request.headers['X-Gitlab-Event']
-                if not 'push' in event.lower():
-                    result = response.json('Got "{}", but accepts "push" events only.'.format(event), 501)
+                if not 'push' in event.lower() and not 'ping' in event.lower():
+                    result = response.json('Got "{}", but accepts "push" and "ping" events only'.format(event), 501)
 
-            if not pusher:
-                result = response.json('Could not find "pusher" object in request JSON.', 400)
+            if 'ping' in event.lower():
+                result = response.json('Pong', 200)
+            elif not pusher:
+                result = response.json('Could not find "pusher" object in request JSON', 400)
             else:
                 repo = Repository(self.db)
                 repo_exists = repo.load(name=repo_name)
                 if not repo_exists:
-                    result = response.json('Repo "{}" not found.'.format(repo_name), 404)
+                    result = response.json('Repo "{}" not found'.format(repo_name), 404)
                 else:
                     scenario = Scenario(self.db)
                     scenario_exists = scenario.load(name=scenario_name, repo_name=repo.name)
                     if not scenario_exists:
-                        result = response.json('Scenario "{}" not found.'.format(repo_name), 404)
+                        result = response.json('Scenario "{}" not found'.format(repo_name), 404)
                     else:
                         job = Job(self.db)
                         job.repo = repo.name
