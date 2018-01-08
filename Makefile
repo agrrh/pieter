@@ -1,18 +1,14 @@
+branch := $(shell git rev-parse --abbrev-ref HEAD)
+
 clean:
 	bash misc/cleanup_jobs_dir.sh
 
 tests: clean
-	nosetests -v
+	test "$(branch)" = "master" && nosetests -v; true
 
-build: clean
-	docker build -t agrrh/pieter-ci:dev .
-
-build-stable: clean
-	docker build -t agrrh/pieter-ci:stable .
+build: tests
+	docker build -t agrrh/pieter-ci:$(branch) .
 
 publish: build
-	docker push agrrh/pieter-ci:dev
-
-publish-stable: build-stable
-	docker push agrrh/pieter-ci:stable
-	docker push agrrh/pieter-ci
+	docker push agrrh/pieter-ci:$(branch)
+	test "$(branch)" = "master" && docker push agrrh/pieter-ci; true
