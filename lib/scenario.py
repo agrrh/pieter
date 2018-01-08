@@ -30,7 +30,7 @@ class Scenario(object):
 
         self.repo = data['repo']
         self.data = data['data']
-        self.latest_job = data['latest_job']
+        self.latest_job = data['latest_job'] if 'latest_job' in data else None
 
         return True
 
