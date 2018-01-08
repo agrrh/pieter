@@ -4,6 +4,8 @@ import subprocess
 import time
 import os
 
+from lib.webhook import Webhook
+
 
 class Job(object):
     def __init__(self, db):
@@ -24,9 +26,11 @@ class Job(object):
         self.stderr = None
         self.rc = None
 
-    async def background(self, script_path):
+    async def background(self, script_path, hook_data=None):
         """Run process in background."""
-        process = await asyncio.create_subprocess_exec(script_path, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        hook_event = Webhook(hook_data)
+
+        process = await asyncio.create_subprocess_exec(script_path, stdin=hook_event.dump(), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         stdout, stderr = await process.communicate()
 
         self.time_done = int(time.time())
@@ -34,7 +38,7 @@ class Job(object):
         self.stderr = stderr.decode()
         self.rc = process.returncode
 
-    async def execute(self, scenario_data):
+    async def execute(self, scenario_data, hook_data=None):
         """Prepare and fire off a job."""
         self.state = 'running'
         self.time_start = int(time.time())
@@ -50,7 +54,7 @@ class Job(object):
         os.chmod(job_script_path, 0o755)
 
         loop = asyncio.get_event_loop()
-        task = loop.create_task(self.background(job_script_path))
+        task = loop.create_task(self.background(job_script_path, hook_data=hook_data))
         task.add_done_callback(self.save)
 
     def load(self, name=None):

@@ -209,7 +209,7 @@ class API(object):
                         job.repo = repo.name
                         job.scenario = scenario.name
                         job.load()
-                        await job.execute(scenario.data)
+                        await job.execute(scenario.data, hook_data=request.json)
                         result = response.json(job.dump(), status=201)
 
             return result
