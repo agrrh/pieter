@@ -30,6 +30,7 @@ class Scenario(object):
 
         self.repo = data['repo']
         self.data = data['data']
+        self.latest_job = data['latest_job']
 
         return True
 
