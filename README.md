@@ -67,7 +67,7 @@ Run locally for test purposes, development or containers-free setup:
 ```
 # First, run redis in your way of choice
 
-source local.env
+source misc/local.env
 ./pieter
 
 http http://127.0.0.1:8000/
