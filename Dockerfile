@@ -1,9 +1,11 @@
 FROM python:3
 
-ADD . /code
+COPY requirements.txt /code/requirements.txt
 WORKDIR /code
 
 RUN pip install -r requirements.txt
+
+COPY . /code
 
 ENV PYTHONUNBUFFERED=1
 

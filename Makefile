@@ -7,6 +7,12 @@ tests: clean
 build: clean
 	docker build -t agrrh/pieter-ci:dev .
 
-publish: clean build
+build-stable: clean
+	docker build -t agrrh/pieter-ci:stable .
+
+publish: build
 	docker push agrrh/pieter-ci:dev
+
+publish-stable: build-stable
+	docker push agrrh/pieter-ci:stable
 	docker push agrrh/pieter-ci
