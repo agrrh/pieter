@@ -15,8 +15,11 @@ PIETER_JOB_REPO_NAME=''
 
 # Actual work
 
-ssh \
-  -o BatchMode \
+test -z "${SSH_AGENT_PID}" && eval $(ssh-agent)
+ssh-add ${PIETER_JOB_SSH_KEY}
+
+ssh -T \
+  -o BatchMode=yes \
   -o ForwardAgent=yes \
   -o StrictHostKeyChecking=no \
   -o IdentityFile=${PIETER_JOB_SSH_KEY} \
