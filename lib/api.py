@@ -25,22 +25,32 @@ class API(object):
         @self.app.route("/")
         async def index(request):
             result = response.json((
-                'GET /repos',                       # Get repos list
-                'PUT /repos/<name>',                # Create/update repo
-                'DELETE /repos/<name>',             # Delete particular repo
+                # Get repos list
+                'GET /repos',
 
-                'PUT /repos/<name>/<scenario>',     # Create/update scenario for repo
-                'GET /repos/<name>/<scenario>',     # Get scenario info
-                'DELETE /repos/<name>/<scenario>',  # Delete scenario
+                # Get repo info
+                'GET /repos/<repo_name>',
+                # Create/update repo
+                'PUT /repos/<repo_name>',
+                # Delete particular repo
+                'DELETE /repos/<repo_name>',
 
-                'PATCH /repos/<name>/<scenario>',   # Execute scenario
+                # Create/update scenario for repo
+                'PUT /repos/<repo_name>/<scenario_name>',
+                # Get scenario info
+                'GET /repos/<repo_name>/<scenario_name>',
+                # Delete scenario
+                'DELETE /repos/<repo_name>/<scenario_name>',
+                # Execute scenario
+                'PATCH /repos/<repo_name>/<scenario_name>',
 
-                'POST /hooks/<repo>/<scenario>',     # Almost the same, execute scenario
-                                                    # POST used for compability with VCS webhooks
-                                                    # Also, note 'hooks' part
+                # Check job status
+                'GET /jobs/<uuid>',
 
-                'GET /jobs/<uuid>'                  # Check job status
+                # VCS webhooks endpoint
+                'POST /webhooks/<repo_name>/<scenario_name>'
             ))
+
             return result
 
         @self.app.route("/repos", methods=['GET'])
