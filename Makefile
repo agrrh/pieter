@@ -4,7 +4,9 @@ clean:
 	bash misc/cleanup_jobs_dir.sh
 
 tests: clean
-	test "$(branch)" = "master" && nosetests -v; true
+	if [ "$(branch)" = "master" ]; then \
+		nosetests -v; \
+	fi
 
 build: tests
 	docker build -t agrrh/pieter-ci:$(branch) .
