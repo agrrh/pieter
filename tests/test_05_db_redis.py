@@ -41,3 +41,7 @@ def test_delete():
 def test_list():
     result = DB.list(PREFIX + '_*')
     return assert_equals(result, [PREFIX + '_present'])
+
+def test_cleanup():
+    result = DB.delete(PREFIX, 'present')
+    return assert_equals(result, True)

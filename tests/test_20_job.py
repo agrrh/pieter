@@ -41,3 +41,9 @@ def test_delete():
     JOB.save()
     result = JOB.delete()
     assert_equals(result, True)
+
+def test_cleanup():
+    result = []
+    result.append(SCENARIO.delete())
+    result.append(REPO.delete())
+    assert_equals(result, [True, True])
