@@ -4,16 +4,18 @@ import subprocess
 import time
 import os
 
-from lib.scenario import Scenario
 from lib.webhook import Webhook
 
 
 class Job(object):
-    def __init__(self, db):
+    def __init__(self, db, repo_name=None, scenario_name=None):
         self.db = db
 
         self.__build()
         self.name = str(uuid.uuid4())
+
+        if repo_name and scenario_name:
+            self.load()
 
     def __build(self):
         """Initialize properties."""
@@ -93,9 +95,6 @@ class Job(object):
 
     def save(self, *args):
         """Write object to database."""
-        scenario = Scenario(self.db, self.scenario)
-        scenario.latest_job = self.name
-        scenario.save()
         return self.db.update('job', self.name, self.dump(), ttl=3600)
 
     def dump(self):
