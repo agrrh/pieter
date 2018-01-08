@@ -168,6 +168,40 @@ class API(object):
 
             return result
 
+        @self.app.route("/webhooks/<repo_name>/<scenario_name>", methods=['POST'])
+        async def webhooks(request, repo_name, scenario_name):
+            is_github = 'X-GitHub-Event' in request.headers
+            is_gitlab = 'X-Gitlab-Event' in request.headers
+
+            pusher = request.json.get('pusher')
+
+            if is_github or is_gitlab:
+                event = request.headers['X-GitHub-Event'] or request.headers['X-Gitlab-Event']
+                if not 'push' in event.lower():
+                    result = response.json('Got "{}", but accepts "push" events only.'.format(event), 501)
+
+            if not pusher:
+                result = response.json('Could not find "pusher" object in request JSON.', 400)
+            else:
+                repo = Repository(self.db)
+                repo_exists = repo.load(name=repo_name)
+                if not repo_exists:
+                    result = response.json('Repo "{}" not found.'.format(repo_name), 404)
+                else:
+                    scenario = Scenario(self.db)
+                    scenario_exists = scenario.load(name=scenario_name, repo_name=repo.name)
+                    if not scenario_exists:
+                        result = response.json('Scenario "{}" not found.'.format(repo_name), 404)
+                    else:
+                        job = Job(self.db)
+                        job.repo = repo.name
+                        job.scenario = scenario.name
+                        job.load()
+                        await job.execute(scenario.data)
+                        result = response.json(job.dump(), status=201)
+
+            return result
+
     def run(self):
         self.app.run(
             host=self.app.config.API_HOST,
