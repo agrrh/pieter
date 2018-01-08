@@ -16,7 +16,9 @@ class Job(object):
         self.repo = repo_name or self.repo
         self.scenario = scenario_name or self.scenario
 
-        if name and repo_name and scenario_name:
+        if not name:
+            self.name = str(uuid.uuid4())
+        elif repo_name and scenario_name:
             self.exists = self.load(name=name, repo_name=repo_name, scenario_name=scenario_name)
 
     def __build(self):
@@ -79,7 +81,6 @@ class Job(object):
     def save(self, *args):
         """Write object to database."""
         self.exists = True
-        self.name = str(uuid.uuid4())
         return self.db.update('job', self.name, self.dump(), ttl=3600)
 
     def delete(self):
