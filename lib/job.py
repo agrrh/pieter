@@ -13,8 +13,11 @@ class Job(object):
 
         self.__build()
 
+        self.repo = repo_name or self.repo
+        self.scenario = scenario_name or self.scenario
+
         if name and repo_name and scenario_name:
-            self.exists = self.load(name=name, repo_name=None, scenario_name=None)
+            self.exists = self.load(name=name, repo_name=repo_name, scenario_name=scenario_name)
 
     def __build(self):
         """Initialize properties."""

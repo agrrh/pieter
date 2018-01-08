@@ -7,6 +7,8 @@ class Scenario(object):
 
         self.__build()
 
+        self.repo = repo_name or self.repo
+
         if name and repo_name:
             self.exists = self.load(name=name, repo_name=repo_name)
 
