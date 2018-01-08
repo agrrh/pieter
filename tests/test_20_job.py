@@ -22,26 +22,32 @@ JOB.scenario = SCENARIO.name
 
 
 def test_load_absent():
-    result = JOB.load('random_missing_name')
-    assert_equals(result, False)
+    job = Job(DB, name='missing_name', repo_name=REPO.name, scenario_name=SCENARIO.name)
+    assert_equals(job.exists, False)
 
 def test_save():
-    result = JOB.save()
+    job = Job(DB, repo_name=REPO.name, scenario_name=SCENARIO.name)
+    result = job.save()
     assert_equals(type(result), dict)
 
 def test_load_present():
-    result = JOB.load()
-    assert_equals(result, True)
+    job = Job(DB, repo_name=REPO.name, scenario_name=SCENARIO.name)
+    job.save()
+    name = job.name
+    job = Job(DB, name=name, repo_name=REPO.name, scenario_name=SCENARIO.name)
+    assert_equals(job.exists, True)
 
 def test_dump():
-    result = JOB.dump()
+    job = Job(DB, repo_name=REPO.name, scenario_name=SCENARIO.name)
+    result = job.dump()
     assert_equals(type(result), dict)
 
 # TODO test execution
 
 def test_delete():
-    JOB.save()
-    result = JOB.delete()
+    job = Job(DB, repo_name=REPO.name, scenario_name=SCENARIO.name)
+    job.save()
+    result = job.delete()
     assert_equals(result, True)
 
 def test_cleanup():
