@@ -6,3 +6,6 @@ data/*
 
 jobs/*
 !jobs/.placeholder
+
+private/*
+!private/.placeholder
