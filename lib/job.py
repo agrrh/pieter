@@ -31,6 +31,9 @@ class Job(object):
 
     def load(self, name=None, repo_name=None, scenario_name=None):
         """Populate properties with values from DB."""
+        self.repo = repo_name or self.repo
+        self.scenario = scenario_name or self.scenario
+
         if name and not self.db.exists('job', name or self.name):
             return False
 
