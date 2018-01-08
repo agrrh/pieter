@@ -28,14 +28,16 @@ class Job(object):
 
     async def background(self, script_path, hook_data=None):
         """Run process in background."""
-        hook_event = Webhook(hook_data)
+        if hook_data:
+            hook_event = Webhook(hook_data)
 
         process = await asyncio.create_subprocess_exec(script_path,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
-        await process.communicate(input=hook_event.dump().encode())
+        if hook_data:
+            await process.communicate(input=hook_event.dump().encode())
         stdout, stderr = await process.communicate()
 
         self.time_done = int(time.time())
