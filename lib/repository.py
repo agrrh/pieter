@@ -21,12 +21,13 @@ class Repository(object):
 
     def load(self, name=None):
         """Populate properties with values from DB."""
+        self.name = name or self.name
+        
         if name and not self.db.exists('repo', name):
             return False
 
         data = self.db.read('repo', name or self.name)
 
-        self.name = name or self.name
         self.source = data['source']
         self.scenarios = data['scenarios']  # TODO use redis lists?
 

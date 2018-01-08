@@ -108,6 +108,8 @@ class API(object):
                 if len(request.body) < 4 or len(request.body) > 10240:
                     result = response.json('File size does not match sane limits', status=400)
                 else:
+                    code = 200 if scenario.exists else 201
+
                     scenario.name = scenario_name
                     scenario.repo = repo.name
                     scenario.data = request.body.decode()
@@ -120,7 +122,6 @@ class API(object):
                         repo.scenarios.append(scenario.name)
                     repo.save()
 
-                    code = 200 if scenario.exists else 201
                     result = response.json(scenario.dump(), status=code)
 
             elif request.method == 'GET':

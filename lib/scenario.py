@@ -20,14 +20,14 @@ class Scenario(object):
 
     def load(self, name=None, repo_name=None):
         """Populate properties with values from DB."""
-        name_unique = '{}/{}'.format(repo_name, name or self.name)
+        self.name = name or self.name
 
+        name_unique = '{}/{}'.format(repo_name, name or self.name)
         if name and not self.db.exists('scenario', name_unique):
             return False
 
         data = self.db.read('scenario', name_unique)
 
-        self.name = name
         self.repo = data['repo']
         self.data = data['data']
 

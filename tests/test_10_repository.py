@@ -4,28 +4,25 @@ from tests.common import DB, PREFIX
 from lib.repository import Repository
 
 
-REPO = Repository(DB)
-
-
 def test_load_absent():
-    result = REPO.load('absent')
-    assert_equals(result, False)
+    repo = Repository(DB, 'absent')
+    assert_equals(repo.exists, False)
 
 def test_save():
-    name = 'some_random_name_for_present_repo'
-    REPO.name = name
-    result = REPO.save()
+    repo = Repository(DB, 'some_random_name_for_present_repo')
+    result = repo.save()
     assert_equals(type(result), dict)
 
 def test_load_present():
-    name = 'some_random_name_for_present_repo'
-    result = REPO.load(name)
-    assert_equals(result, True)
+    repo = Repository(DB, 'some_random_name_for_present_repo')
+    assert_equals(repo.exists, True)
 
 def test_dump():
-    result = REPO.dump()
+    repo = Repository(DB, 'some_random_name_for_present_repo')
+    result = repo.dump()
     assert_equals(type(result), dict)
 
 def test_delete():
-    result = REPO.delete()
+    repo = Repository(DB, 'some_random_name_for_present_repo')
+    result = repo.delete()
     assert_equals(result, True)
