@@ -110,7 +110,6 @@ class Job(object):
 
     async def execute(self, scenario_data, hook_data=None):
         """Prepare and fire off a job."""
-        self.name = str(uuid.uuid4())
         self.state = 'running'
         self.time_start = int(time.time())
 
