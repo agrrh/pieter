@@ -110,7 +110,8 @@ class API(object):
                         repo.scenarios.append(scenario.name)
                     repo.save()
 
-                    result = response.json(scenario.dump(), status=201)
+                    code = 200 if scenario_exists else 201
+                    result = response.json(scenario.dump(), status=code)
 
             elif request.method == 'GET':
                 if not scenario_exists:
