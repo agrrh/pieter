@@ -30,7 +30,7 @@ def test_create_ttl():
     return assert_equals(result, val)
 
 def test_read_ttl():
-    time.sleep(1)
+    time.sleep(2)
     result = DB.read(PREFIX, 'ttl')
     return assert_equals(result, None)
 
