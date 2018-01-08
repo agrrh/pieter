@@ -46,6 +46,8 @@ class API(object):
 
                 # Check job status
                 'GET /jobs/<uuid>',
+                # Get latest job for repo/scenario
+                'GET /repos/<repo_name>/<scenario_name>/jobs/latest',
 
                 # VCS webhooks endpoint
                 'POST /webhooks/<repo_name>/<scenario_name>'
@@ -62,11 +64,10 @@ class API(object):
 
         @self.app.route("/repos/<repo_name>", methods=['GET', 'PUT', 'DELETE'])
         async def repo_actions(request, repo_name):
-            repo = Repository(self.db)
-            repo_exists = repo.load(repo_name)
+            repo = Repository(self.db, name=repo_name)
 
             if request.method == 'GET':
-                if not repo_exists:
+                if not repo.exists:
                     result = response.json(None, status=404)
                 else:
                     result = response.json(repo.dump())
@@ -90,7 +91,7 @@ class API(object):
                     result = response.json(repo_new, status=code)
 
             elif request.method == 'DELETE':
-                if not repo_exists:
+                if not repo.exists:
                     result = response.json(None, status=404)
                 else:
                     repo.delete()
@@ -100,11 +101,8 @@ class API(object):
 
         @self.app.route("/repos/<repo_name>/<scenario_name>", methods=['PUT', 'GET', 'DELETE', 'PATCH'])
         async def scenario_actions(request, repo_name, scenario_name):
-            repo = Repository(self.db)
-            repo_exists = repo.load(name=repo_name)
-
-            scenario = Scenario(self.db)
-            scenario_exists = scenario.load(name=scenario_name, repo_name=repo.name)
+            repo = Repository(self.db, name=repo_name)
+            scenario = Scenario(self.db, name=scenario_name, repo_name=repo.name)
 
             if request.method == 'PUT':
                 if len(request.body) < 4 or len(request.body) > 10240:
@@ -122,17 +120,17 @@ class API(object):
                         repo.scenarios.append(scenario.name)
                     repo.save()
 
-                    code = 200 if scenario_exists else 201
+                    code = 200 if scenario.exists else 201
                     result = response.json(scenario.dump(), status=code)
 
             elif request.method == 'GET':
-                if not scenario_exists:
+                if not scenario.exists:
                     result = response.json(None, status=404)
                 else:
                     result = response.json(scenario.dump())
 
             elif request.method == 'DELETE':
-                if not scenario_exists:
+                if not scenario.exists:
                     result = response.json(None, status=404)
                 else:
                     # FIXME
@@ -147,7 +145,7 @@ class API(object):
                     result = response.json(scenario.dump())
 
             elif request.method == 'PATCH':
-                if not scenario_exists:
+                if not scenario.exists:
                     result = response.json(None, status=404)
                 else:
                     job = Job(self.db)
@@ -157,6 +155,23 @@ class API(object):
                     await job.execute(scenario.data)
 
                     result = response.json(job.dump(), status=201)
+
+            return result
+
+        @self.app.route("/repos/<repo_name>/<scenario_name>/jobs/latest", methods=['GET'])
+        async def scenario_job_latest(request, repo_name, scenario_name):
+            repo = Repository(self.db, name=repo_name)
+            scenario = Scenario(self.db, name=scenario_name, repo_name=repo.name)
+
+            if not repo.exists:
+                result = response.json('Repo not found', status=404)
+            elif not scenario.exists:
+                result = response.json('Scenario not found', status=404)
+            else:
+                if scenario.latest_job:
+                    result = response.redirect('/jobs/' + scenario.latest_job)
+                else:
+                    result = response.json('No jobs found', status=404)
 
             return result
 
@@ -195,14 +210,12 @@ class API(object):
             elif not pusher:
                 result = response.json('Could not find "pusher" object in request JSON', 400)
             else:
-                repo = Repository(self.db)
-                repo_exists = repo.load(name=repo_name)
-                if not repo_exists:
+                repo = Repository(self.db, name=repo_name)
+                if not repo.exists:
                     result = response.json('Repo "{}" not found'.format(repo_name), 404)
                 else:
-                    scenario = Scenario(self.db)
-                    scenario_exists = scenario.load(name=scenario_name, repo_name=repo.name)
-                    if not scenario_exists:
+                    scenario = Scenario(self.db, name=scenario_name, repo_name=repo.name)
+                    if not scenario.exists:
                         result = response.json('Scenario "{}" not found'.format(repo_name), 404)
                     else:
                         job = Job(self.db)

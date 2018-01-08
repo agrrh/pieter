@@ -4,6 +4,7 @@ import subprocess
 import time
 import os
 
+from lib.scenario import Scenario
 from lib.webhook import Webhook
 
 
@@ -92,6 +93,9 @@ class Job(object):
 
     def save(self, *args):
         """Write object to database."""
+        scenario = Scenario(self.db, self.scenario)
+        scenario.latest_job = self.name
+        scenario.save()
         return self.db.update('job', self.name, self.dump(), ttl=3600)
 
     def dump(self):
