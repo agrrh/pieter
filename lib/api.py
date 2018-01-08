@@ -45,8 +45,10 @@ class API(object):
 
         @self.app.route("/repos", methods=['GET'])
         async def repos_index(request):
-            data = self.db.list('repo_*')
-            return response.json(data)
+            repos_list = self.db.list('repo_*')
+            # Cleaning up "repo_" prefix
+            repos_list = [repo_name[5:] for repo_name in repos_list]
+            return response.json(repos_list)
 
         @self.app.route("/repos/<repo_name>", methods=['GET', 'PUT', 'DELETE'])
         async def repo_actions(request, repo_name):
