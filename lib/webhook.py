@@ -6,6 +6,7 @@ class Webhook(object):
         if not data:
             return None
 
+        self.repo = data['repository']['name']
         self.ref = data['ref']
         self.branch = self.ref.split('/')[-1] if '/' in self.ref else None
         self.commit = data['commits'][-1]['id']
