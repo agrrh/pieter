@@ -19,6 +19,8 @@ class API(object):
             port=self.app.config.DB_PORT
         )
 
+        self.api_prefix = self.app.config.API_PREFIX
+
         self.routes_define()
 
     def routes_define(self):
@@ -68,7 +70,7 @@ class API(object):
 
             if request.method == 'GET':
                 if not repo.exists:
-                    result = response.json(None, status=404)
+                    result = response.json('Repo not found', status=404)
                 else:
                     result = response.json(repo.dump())
 
@@ -92,7 +94,7 @@ class API(object):
 
             elif request.method == 'DELETE':
                 if not repo.exists:
-                    result = response.json(None, status=404)
+                    result = response.json('Repo not found', status=404)
                 else:
                     repo.delete()
                     result = response.json(repo.dump())
@@ -126,13 +128,13 @@ class API(object):
 
             elif request.method == 'GET':
                 if not scenario.exists:
-                    result = response.json(None, status=404)
+                    result = response.json('Scenario not found', status=404)
                 else:
                     result = response.json(scenario.dump())
 
             elif request.method == 'DELETE':
                 if not scenario.exists:
-                    result = response.json(None, status=404)
+                    result = response.json('Scenario not found', status=404)
                 else:
                     # FIXME
                     # This is unsafe, must load-remove-save as a transaction here
@@ -147,7 +149,7 @@ class API(object):
 
             elif request.method == 'PATCH':
                 if not scenario.exists:
-                    result = response.json(None, status=404)
+                    result = response.json('Scenario not found', status=404)
                 else:
                     job = Job(self.db, repo_name=repo.name, scenario_name=scenario.name)
 
@@ -171,7 +173,7 @@ class API(object):
                 result = response.json('Scenario not found', status=404)
             else:
                 if scenario.latest_job:
-                    result = response.redirect('/jobs/' + scenario.latest_job)
+                    result = response.redirect(self.api_prefix + '/jobs/' + scenario.latest_job)
                 else:
                     result = response.json('No jobs found', status=404)
 
@@ -183,12 +185,12 @@ class API(object):
             job.load(job_name)
             if request.method == 'GET':
                 if job.state is None:
-                    result = response.json(None, status=404)
+                    result = response.json('Job not found', status=404)
                 else:
                     result = response.json(job.dump())
             elif request.method == 'DELETE':
                 if job.state is None:
-                    result = response.json(None, status=404)
+                    result = response.json('Job not found', status=404)
                 else:
                     job.delete()
                     result = response.json(job.dump())
