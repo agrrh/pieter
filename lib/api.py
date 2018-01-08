@@ -222,10 +222,9 @@ class API(object):
                     if not scenario.exists:
                         result = response.json('Scenario "{}" not found'.format(repo_name), 404)
                     else:
-                        job = Job(self.db)
-                        job.repo = repo.name
-                        job.scenario = scenario.name
-                        job.load()
+                        job = Job(self.db, repo_name=repo.name, scenario_name=scenario.name)
+                        scenario.latest_job = job.name
+                        scenario.save()
                         await job.execute(scenario.data, hook_data=request.json)
                         result = response.json(job.dump(), status=201)
 
