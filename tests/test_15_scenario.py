@@ -7,28 +7,27 @@ from lib.scenario import Scenario
 
 REPO = Repository(DB)
 REPO.name = 'random_repo_name'
-SCENARIO = Scenario(DB)
 
 
 def test_load_absent():
-    result = SCENARIO.load('absent', repo_name=REPO.name)
-    assert_equals(result, False)
+    scenario = Scenario(DB, 'absent', repo_name=REPO.name)
+    assert_equals(scenario.exists, False)
 
 def test_save():
-    name = 'another_random_name_for_present_scenario'
-    SCENARIO.name = name
-    result = SCENARIO.save()
+    scenario = Scenario(DB, 'another_random_name_for_present_scenario', repo_name=REPO.name)
+    result = scenario.save()
     assert_equals(type(result), dict)
 
 def test_load_present():
-    name = 'another_random_name_for_present_scenario'
-    result = SCENARIO.load(name)
-    assert_equals(result, True)
+    scenario = Scenario(DB, 'another_random_name_for_present_scenario', repo_name=REPO.name)
+    assert_equals(scenario.exists, True)
 
 def test_dump():
-    result = SCENARIO.dump()
+    scenario = Scenario(DB, 'another_random_name_for_present_scenario', repo_name=REPO.name)
+    result = scenario.dump()
     assert_equals(type(result), dict)
 
 def test_delete():
-    result = SCENARIO.delete()
+    scenario = Scenario(DB, 'another_random_name_for_present_scenario', repo_name=REPO.name)
+    result = scenario.delete()
     assert_equals(result, True)
