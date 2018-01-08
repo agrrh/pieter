@@ -3,6 +3,7 @@ import asyncio
 import subprocess
 import time
 import os
+import io
 
 from lib.webhook import Webhook
 
@@ -30,7 +31,7 @@ class Job(object):
         """Run process in background."""
         hook_event = Webhook(hook_data)
 
-        process = await asyncio.create_subprocess_exec(script_path, stdin=hook_event.dump(), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        process = await asyncio.create_subprocess_exec(script_path, stdin=io.StringIO(hook_event.dump()), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         stdout, stderr = await process.communicate()
 
         self.time_done = int(time.time())
