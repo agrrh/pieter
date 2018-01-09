@@ -18,14 +18,34 @@
         </div>
       </div>
 
-      <div id="repo-template">
+      <div id="repo-scenario-template">
+        <div class="ui white label">${scenario}</div>
+      </div>
+
+      <div id="repos-repo-template">
         <div id="repo-${name}" class="column">
           <div class="ui segments repo">
             <div class="ui segment">
-              <p><a class="ui header" href="#1">${name}</a></p>
-              <p><a href="#">${latest_job}&nbsp;</a></p>
+              <p><i class="folder open icon"></i>&nbsp;<a class="ui header large" href="#" onclick="hideRepos(); displayRepo('${name}');">${name}</a></p>
+              <p><i class="setting icon"></i>&nbsp;<a href="#">${latest_job}&nbsp;</a></p>
             </div>
             <div id="repo-${name}-scenarios" class="ui segment scenarios"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="repo" class="ui three column grid container">
+      <div id="repo-loading" class="column">
+        <div class="ui loading segment">
+          <p></p>
+        </div>
+      </div>
+
+      <div id="repo-template">
+        <div class="column">
+          <div class="ui segment">
+            <p>Hey</p>
           </div>
         </div>
       </div>
