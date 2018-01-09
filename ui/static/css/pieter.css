@@ -1,0 +1,12 @@
+div#header {
+  padding: 32px 0px 32px 0px;
+}
+
+div.repo {
+  min-height: 140px;
+}
+
+div#repo-template,
+div#repo-scenario-template {
+  display: none;
+}

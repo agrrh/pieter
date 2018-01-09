@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.css">
+    <link rel="stylesheet" href="./static/css/pieter.css">
+  </head>
+
+  <body>
+    <div id="header" class="ui container">
+      <h1 class="ui header">Pieter CI</h1>
+      <hr>
+    </div>
+
+    <div id="repos" class="ui three column grid container">
+      <div id="repos-loading" class="column">
+        <div class="ui loading segment">
+          <p></p>
+        </div>
+      </div>
+
+      <div id="repo-template">
+        <div id="repo-${name}" class="column">
+          <div class="ui segments repo">
+            <div class="ui segment">
+              <p><a class="ui header" href="#1">${name}</a></p>
+              <p><a href="#">${latest_job}&nbsp;</a></p>
+            </div>
+            <div id="repo-${name}-scenarios" class="ui segment scenarios"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"></script>
+
+    <script type="text/javascript" src="./static/js/main.js"></script>
+  </body>
+</html>
