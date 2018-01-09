@@ -4,10 +4,7 @@ from sanic import Sanic
 from sanic import response
 
 from lib.db_redis import Database
-
-from lib.repository import Repository
-from lib.scenario import Scenario
-from lib.job import Job
+from lib.manager import Manager
 
 
 class API(object):
@@ -18,38 +15,25 @@ class API(object):
             host=self.app.config.DB_HOST,
             port=self.app.config.DB_PORT
         )
+        self.manager = Manager(self.db)
 
         self.routes_define()
 
     def routes_define(self):
         @self.app.route("/")
         async def index(request):
+            # TODO automate it
             result = response.json((
-                # Get repos list
                 'GET /repos',
-
-                # Get repo info
                 'GET /repos/<repo_name>',
-                # Create/update repo
                 'PUT /repos/<repo_name>',
-                # Delete particular repo
                 'DELETE /repos/<repo_name>',
-
-                # Create/update scenario for repo
                 'PUT /repos/<repo_name>/<scenario_name>',
-                # Get scenario info
                 'GET /repos/<repo_name>/<scenario_name>',
-                # Delete scenario
                 'DELETE /repos/<repo_name>/<scenario_name>',
-                # Execute scenario
                 'PATCH /repos/<repo_name>/<scenario_name>',
-
-                # Check job status
                 'GET /jobs/<uuid>',
-                # Get latest job for repo/scenario
                 'GET /repos/<repo_name>/<scenario_name>/jobs/latest',
-
-                # VCS webhooks endpoint
                 'POST /webhooks/<repo_name>/<scenario_name>'
             ))
 
@@ -57,142 +41,86 @@ class API(object):
 
         @self.app.route("/repos", methods=['GET'])
         async def repos_index(request):
-            repos_list = self.db.list('repo_*')
-            # Cleaning up "repo_" prefix
-            repos_list = [repo_name[5:] for repo_name in repos_list]
-            return response.json(repos_list)
+            return response.json(self.manager.repos_list())
 
         @self.app.route("/repos/<repo_name>", methods=['GET', 'PUT', 'DELETE'])
         async def repo_actions(request, repo_name):
-            repo = Repository(self.db, name=repo_name)
-
             if request.method == 'GET':
-                if not repo.exists:
-                    result = response.json('Repo not found', status=404)
-                else:
-                    result = response.json(repo.dump())
+                repo = self.manager.repo_load(repo_name)
+                result = response.json(repo.dump(), status=200) \
+                    if repo.exists \
+                    else response.json('Repo not found', status=404)
 
             elif request.method == 'PUT':
-                if not request.json or 'source' not in request.json:
-                    result = response.json('Provide "source" with git URL', status=400)
-                else:
-                    source = request.json['source']
-
-                    repo.name = repo_name
-                    repo.scenarios = []
-
-                    repo_old = repo.dump()
-                    repo.source = source
-                    repo.save()
-                    repo_new = repo.dump()
-
-                    code = 200 if repo_new == repo_old else 201
-
-                    result = response.json(repo_new, status=code)
+                repo = self.manager.repo_load(repo_name)
+                result = response.json(repo.dump(), status=201) \
+                    if self.manager.repo_update(repo_name, request.json) \
+                    else response.json('Failed to update repo', status=500)
 
             elif request.method == 'DELETE':
-                if not repo.exists:
-                    result = response.json('Repo not found', status=404)
+                repo = self.manager.repo_load(repo_name)
+                if repo.exists:
+                    if self.manager.repo_delete(repo_name):
+                        result = response.json(repo.dump(), status=200)
+                    else:
+                        result = response.json('Failed to delet repo', status=500)
                 else:
-                    repo.delete()
-                    result = response.json(repo.dump())
+                    response.json('Repo not found', status=404)
 
             return result
 
         @self.app.route("/repos/<repo_name>/<scenario_name>", methods=['PUT', 'GET', 'DELETE', 'PATCH'])
         async def scenario_actions(request, repo_name, scenario_name):
-            repo = Repository(self.db, name=repo_name)
-            scenario = Scenario(self.db, name=scenario_name, repo_name=repo.name)
+            repo = self.manager.repo_load(repo_name)
+            scenario = self.manager.scenario_load(scenario_name, repo=repo)
 
             if request.method == 'PUT':
                 if len(request.body) < 4 or len(request.body) > 10240:
                     result = response.json('File size does not match sane limits', status=400)
                 else:
                     code = 200 if scenario.exists else 201
-
-                    scenario.name = scenario_name
-                    scenario.repo = repo.name
-                    scenario.data = request.body.decode()
-                    scenario.save()
-
-                    # FIXME
-                    # This is unsafe, must load-append-save as a transaction here
-                    repo.load()
-                    if scenario.name not in repo.scenarios:
-                        repo.scenarios.append(scenario.name)
-                    repo.save()
-
+                    scenario = self.manager.scenario_update(
+                        scenario_name, repo=repo, data={'data': request.body.decode()}
+                    )
                     result = response.json(scenario.dump(), status=code)
 
             elif request.method == 'GET':
-                if not scenario.exists:
-                    result = response.json('Scenario not found', status=404)
-                else:
+                if scenario.exists:
                     result = response.json(scenario.dump())
+                else:
+                    result = response.json('Scenario not found', status=404)
 
             elif request.method == 'DELETE':
-                if not scenario.exists:
-                    result = response.json('Scenario not found', status=404)
-                else:
-                    # FIXME
-                    # This is unsafe, must load-remove-save as a transaction here
-                    repo.load()
-                    if scenario.name in repo.scenarios:
-                        repo.scenarios.remove(scenario.name)
-                    repo.save()
-
-                    scenario.delete()
-
+                if scenario.exists:
+                    scenario = self.manager.scenario_delete(scenario_name, repo=repo)
                     result = response.json(scenario.dump())
+                else:
+                    result = response.json('Scenario not found', status=404)
 
             elif request.method == 'PATCH':
-                if not scenario.exists:
-                    result = response.json('Scenario not found', status=404)
-                else:
-                    job = Job(self.db, repo_name=repo.name, scenario_name=scenario.name)
-
-                    await job.execute(scenario.data)
-
-                    scenario.latest_job = job.name
-                    scenario.save()
-
+                if scenario.exists:
+                    job = await self.manager.job_run(repo, scenario)
                     result = response.json(job.dump(), status=201)
-
-            return result
-
-        @self.app.route("/repos/<repo_name>/<scenario_name>/jobs/latest", methods=['GET'])
-        async def scenario_job_latest(request, repo_name, scenario_name):
-            repo = Repository(self.db, name=repo_name)
-            scenario = Scenario(self.db, name=scenario_name, repo_name=repo.name)
-            job = Job(self.db, name=scenario.latest_job, repo_name=repo.name, scenario_name=scenario.name)
-
-            if not repo.exists:
-                result = response.json('Repo not found', status=404)
-            elif not scenario.exists:
-                result = response.json('Scenario not found', status=404)
-            else:
-                if scenario.latest_job:
-                    result = response.json(job.dump(), status=200)
                 else:
-                    result = response.json('No jobs found', status=404)
+                    result = response.json('Scenario not found', status=404)
 
             return result
 
         @self.app.route("/jobs/<job_name>", methods=['GET', 'DELETE'])
         async def job_actions(request, job_name):
-            job = Job(self.db)
-            job.load(job_name)
+            job = self.manager.job_load(job_name)
+
             if request.method == 'GET':
-                if job.state is None:
-                    result = response.json('Job not found', status=404)
-                else:
+                if job and job.exists:
                     result = response.json(job.dump())
+                else:
+                    result = response.json('Job not found', status=404)
             elif request.method == 'DELETE':
-                if job.state is None:
-                    result = response.json('Job not found', status=404)
-                else:
-                    job.delete()
+                if job and job.exists:
+                    job = self.manager.job_delete(job_name)
                     result = response.json(job.dump())
+                else:
+                    result = response.json('Job not found', status=404)
 
             return result
 
@@ -200,32 +128,28 @@ class API(object):
         async def webhooks(request, repo_name, scenario_name):
             is_github = 'X-GitHub-Event' in request.headers
             is_gitlab = 'X-Gitlab-Event' in request.headers
+            event_type = request.headers['X-GitHub-Event'] or request.headers['X-Gitlab-Event']
+            pusher_recieved = request.json.get('pusher')
 
-            pusher = request.json.get('pusher')
+            headers_ok = is_github or is_gitlab
+            pusher_ok = pusher_recieved and 'push' in event_type.lower()
+            ping_ok = 'ping' in event_type.lower()
 
-            if is_github or is_gitlab:
-                event = request.headers['X-GitHub-Event'] or request.headers['X-Gitlab-Event']
-                if not 'push' in event.lower() and not 'ping' in event.lower():
-                    result = response.json('Got "{}", but accepts "push" and "ping" events only'.format(event), 501)
-
-            if 'ping' in event.lower():
+            if ping_ok:
                 result = response.json('Pong', 200)
-            elif not pusher:
-                result = response.json('Could not find "pusher" object in request JSON', 400)
+            elif not headers_ok or not pusher_ok:
+                result = response.json('Malformed request, check "pusher" data and headers', 400)
             else:
-                repo = Repository(self.db, name=repo_name)
+                repo = self.manager.repo_load(repo_name)
+                scenario = self.manager.scenario_load(scenario_name, repo=repo)
+
                 if not repo.exists:
-                    result = response.json('Repo "{}" not found'.format(repo_name), 404)
+                    result = response.json('Repo not found', 404)
+                elif not scenario.exists:
+                    result = response.json('Scenario not found', 404)
                 else:
-                    scenario = Scenario(self.db, name=scenario_name, repo_name=repo.name)
-                    if not scenario.exists:
-                        result = response.json('Scenario "{}" not found'.format(repo_name), 404)
-                    else:
-                        job = Job(self.db, repo_name=repo.name, scenario_name=scenario.name)
-                        scenario.latest_job = job.name
-                        scenario.save()
-                        await job.execute(scenario.data, hook_data=request.json)
-                        result = response.json(job.dump(), status=201)
+                    job = await self.manager.job_run(repo, scenario)
+                    result = response.json(job.dump(), status=201)
 
             return result
 

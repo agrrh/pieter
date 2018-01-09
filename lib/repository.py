@@ -1,54 +1,15 @@
-import os
-
-from lib.scenario import Scenario
+from lib.baseobject import BaseObject
 
 
-class Repository(object):
-    def __init__(self, db, name=None):
-        self.db = db
+class Repository(BaseObject):
+    def __init__(self, name, data=None, db=None):
+        super(Repository, self).__init__('repo', name, db=db)
 
-        self.__build()
+        self.name_unique = name
+        self.build(data)
 
-        if name:
-            self.exists = self.load(name)
+    def build(self, data=None):
+        super(Repository, self).build(data)
 
-    def __build(self):
-        """Initialize properties."""
-        self.exists = False
-        self.name = None
-        self.source = None
-        self.scenarios = None
-
-    def load(self, name=None):
-        """Populate properties with values from DB."""
-        self.name = name or self.name
-        
-        if name and not self.db.exists('repo', name):
-            return False
-
-        data = self.db.read('repo', name or self.name)
-
-        self.source = data['source']
-        self.scenarios = data['scenarios']  # TODO use redis lists?
-
-        return True
-
-    def save(self):
-        """Write object to database."""
-        self.exists = True
-        return self.db.update('repo', self.name, self.dump())
-
-    def dump(self):
-        """Provide object as dict."""
-        return {
-            'exists': self.exists,
-            'name': self.name,
-            'source': self.source,
-            'scenarios': self.scenarios
-        }
-
-    def delete(self):
-        """Remove from database and nullify values."""
-        result = self.db.delete('repo', self.name)
-        self.__build()
-        return bool(result)
+        self.scenarios = getattr(self, 'scenarios', [])
+        self.latest_job = getattr(self, 'latest_job', None)

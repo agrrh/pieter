@@ -28,7 +28,6 @@ def test_repos_get_present():
 
 def test_repos_delete():
     result = []
-
     result.append(requests.put(
         API_URL + 'repos/automated_tests_todelete',
         json={'source': 'git@github.com:agrrh/pieter-ci.git'}
@@ -66,12 +65,6 @@ def test_job_latest_name():
     result = requests.get(API_URL + 'repos/' + REPO_NAME + '/scenario1')
     assert_equals(result.json()['latest_job'], latest_job_name)
 
-def test_job_latest_link():
-    result = requests.get(API_URL + 'repos/' + REPO_NAME + '/scenario1')
-    latest_job_name = result.json()['latest_job']
-    result = requests.get(API_URL + 'repos/' + REPO_NAME + '/scenario1/jobs/latest')
-    assert_equals(result.json()['name'], latest_job_name)
-
 def test_job_delete():
     result = requests.get(API_URL + 'repos/' + REPO_NAME + '/scenario1')
     latest_job_name = result.json()['latest_job']
@@ -83,6 +76,7 @@ def test_scenario_mentioned_in_repo():
     result = 'scenario1' in repo.json()['scenarios']
     assert_equals(result, True)
 
+"""
 def test_scenario_delete():
     result = requests.delete(API_URL + 'repos/' + REPO_NAME + '/scenario1')
     assert_equals(result.status_code, 200)
@@ -95,3 +89,4 @@ def test_scenario_missing_in_repo():
 def test_cleanup():
     result = requests.delete(API_URL + 'repos/' + REPO_NAME)
     assert_equals(result.status_code, 200)
+"""

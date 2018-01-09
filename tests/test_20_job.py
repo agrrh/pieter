@@ -6,47 +6,39 @@ from lib.scenario import Scenario
 from lib.job import Job
 
 
-REPO = Repository(DB)
-REPO.name = 'another_random_repo_name'
+REPO = Repository('another_random_repo_name', db=DB)
 REPO.save()
 
-SCENARIO = Scenario(DB)
-SCENARIO.name = 'random_scenario'
-SCENARIO.repo = REPO.name
+SCENARIO = Scenario('random_scenario', REPO, db=DB)
 SCENARIO.data = '#!/bin/bash\nsleep 1\necho done'
 SCENARIO.save()
 
-JOB = Job(DB)
-JOB.repo = REPO.name
-JOB.scenario = SCENARIO.name
-
 
 def test_load_absent():
-    job = Job(DB, name='missing_name', repo_name=REPO.name, scenario_name=SCENARIO.name)
+    job = Job('missing_name', REPO, SCENARIO, db=DB)
+    job.load()
     assert_equals(job.exists, False)
 
 def test_save():
-    job = Job(DB, repo_name=REPO.name, scenario_name=SCENARIO.name)
+    job = Job('present_name', REPO, SCENARIO, db=DB)
+    job.attribute = 51
     result = job.save()
     assert_equals(type(result), dict)
 
 def test_load_present():
-    job = Job(DB, repo_name=REPO.name, scenario_name=SCENARIO.name)
-    job.save()
-    name = job.name
-    job = Job(DB, name=name, repo_name=REPO.name, scenario_name=SCENARIO.name)
-    assert_equals(job.exists, True)
+    job = Job('present_name', REPO, SCENARIO, db=DB)
+    job.load()
+    assert_equals(job.attribute, 51)
 
 def test_dump():
-    job = Job(DB, repo_name=REPO.name, scenario_name=SCENARIO.name)
+    job = Job('present_name', REPO, SCENARIO, db=DB)
     result = job.dump()
     assert_equals(type(result), dict)
 
 # TODO test execution
 
 def test_delete():
-    job = Job(DB, repo_name=REPO.name, scenario_name=SCENARIO.name)
-    job.save()
+    job = Job('present_name', REPO, SCENARIO, db=DB)
     result = job.delete()
     assert_equals(result, True)
 

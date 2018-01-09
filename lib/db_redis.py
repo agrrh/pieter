@@ -25,11 +25,11 @@ class Database(object):
 
     def delete(self, prefix, index):
         name = '_'.join((prefix, index))
-        return self.handler.delete(name)
+        return bool(self.handler.delete(name))
 
     def exists(self, prefix, index):
         name = '_'.join((prefix, index))
-        return self.handler.exists(name)
+        return bool(self.handler.exists(name))
 
     def list(self, pattern='*'):
         return [k.decode() for k in self.handler.keys(pattern=pattern)]
