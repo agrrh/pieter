@@ -48,6 +48,8 @@ class Job(BaseObject):
         self.stderr = stderr.decode()
         self.rc = process.returncode
 
+        return self.dump()
+
     async def execute(self, scenario_data, hook_data=None):
         """Prepare and fire off a job."""
         self.state = 'running'
