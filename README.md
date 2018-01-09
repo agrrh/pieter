@@ -81,15 +81,21 @@ pip3 install -r requirements.txt
 
 # Configuraion
 
-You could customize env variables pointing API on which address/port to listen and where to seek for DB, these are defaults:
+You could customize env variables to configure the software, these are defaults:
 
 ```
 PIETER_DB_HOST=redis
 PIETER_DB_PORT=6379
+```
+
+Shows where to seek for DB.
+
+```
 PIETER_API_HOST=0.0.0.0
 PIETER_API_PORT=8000
-PIETER_API_PREFIX=""
 ```
+
+These options point API on which address/port to listen.
 
 # API examples
 

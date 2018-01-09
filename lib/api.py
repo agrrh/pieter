@@ -19,8 +19,6 @@ class API(object):
             port=self.app.config.DB_PORT
         )
 
-        self.api_prefix = self.app.config.API_PREFIX
-
         self.routes_define()
 
     def routes_define(self):
@@ -166,6 +164,7 @@ class API(object):
         async def scenario_job_latest(request, repo_name, scenario_name):
             repo = Repository(self.db, name=repo_name)
             scenario = Scenario(self.db, name=scenario_name, repo_name=repo.name)
+            job = Job(self.db, name=scenario.latest_job, repo_name=repo.name, scenario_name=scenario.name)
 
             if not repo.exists:
                 result = response.json('Repo not found', status=404)
@@ -173,7 +172,7 @@ class API(object):
                 result = response.json('Scenario not found', status=404)
             else:
                 if scenario.latest_job:
-                    result = response.redirect(self.api_prefix + '/jobs/' + scenario.latest_job)
+                    result = response.json(job.dump(), status=200)
                 else:
                     result = response.json('No jobs found', status=404)
 
