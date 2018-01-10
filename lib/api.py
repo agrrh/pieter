@@ -33,7 +33,6 @@ class API(object):
                 'DELETE /repos/<repo_name>/<scenario_name>',
                 'PATCH /repos/<repo_name>/<scenario_name>',
                 'GET /jobs/<uuid>',
-                'GET /repos/<repo_name>/<scenario_name>/jobs/latest',
                 'POST /webhooks/<repo_name>/<scenario_name>'
             ))
 
