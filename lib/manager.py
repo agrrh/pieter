@@ -48,9 +48,9 @@ class Manager(object):
             repo.save()
         return scenario
 
-    async def job_run(self, repo, scenario):
+    async def job_run(self, repo, scenario, hook_data=None):
         job = Job(None, repo, scenario, db=self.db)
-        await job.execute(scenario.data)
+        await job.execute(scenario.data, hook_data=hook_data)
         repo.latest_job = job.name
         repo.save()
         scenario.latest_job = job.name

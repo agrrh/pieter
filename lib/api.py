@@ -147,7 +147,7 @@ class API(object):
                 elif not scenario.exists:
                     result = response.json('Scenario not found', 404)
                 else:
-                    job = await self.manager.job_run(repo, scenario)
+                    job = await self.manager.job_run(repo, scenario, hook_data=request.json)
                     result = response.json(job.dump(), status=201)
 
             return result
