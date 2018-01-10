@@ -8,6 +8,8 @@ from lib.baseobject import BaseObject
 
 
 class Job(BaseObject):
+    """Job object, accept repo and scenario, execute job and save it's result."""
+
     def __init__(self, name, repo, scenario, data=None, db=None):
         if name is None:
             name = str(uuid.uuid4())
@@ -21,6 +23,7 @@ class Job(BaseObject):
         self.build(data)
 
     def build(self, data=None):
+        """Initialize object special attributes."""
         super(Job, self).build(data)
 
         self.state = getattr(self, 'state', 'created')
@@ -28,6 +31,12 @@ class Job(BaseObject):
         self.stdout = getattr(self, 'stdout', None)
         self.stderr = getattr(self, 'stderr', None)
         self.rc = getattr(self, 'rc', None)
+
+    def save(self, data=None, ttl=None):
+        """Save data or tasks instances results."""
+        if isinstance(data, asyncio.tasks.Task):
+            data = data.result()
+        return super(Job, self).save(data=data, ttl=3600)
 
     async def background(self, script_path, hook_data=None):
         """Run process in background."""
@@ -47,8 +56,7 @@ class Job(BaseObject):
         self.stdout = stdout.decode()
         self.stderr = stderr.decode()
         self.rc = process.returncode
-
-        return self.dump()
+        self.state = 'success' if self.rc is 0 else 'fail'
 
     async def execute(self, scenario_data, hook_data=None):
         """Prepare and fire off a job."""
