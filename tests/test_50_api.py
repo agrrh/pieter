@@ -76,7 +76,6 @@ def test_scenario_mentioned_in_repo():
     result = 'scenario1' in repo.json()['scenarios']
     assert_equals(result, True)
 
-"""
 def test_scenario_delete():
     result = requests.delete(API_URL + 'repos/' + REPO_NAME + '/scenario1')
     assert_equals(result.status_code, 200)
@@ -89,4 +88,3 @@ def test_scenario_missing_in_repo():
 def test_cleanup():
     result = requests.delete(API_URL + 'repos/' + REPO_NAME)
     assert_equals(result.status_code, 200)
-"""
