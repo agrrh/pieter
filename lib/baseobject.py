@@ -33,10 +33,10 @@ class BaseObject(object):
         self.build(data)
         return data
 
-    def save(self, data=None):
+    def save(self, data=None, ttl=None):
         if data is None:
             data = self.dump()
-        return self.db.update(self.type, self.name_unique, data)
+        return self.db.update(self.type, self.name_unique, data, ttl=ttl)
 
     def delete(self):
         self.build(None)
