@@ -7,7 +7,7 @@
 
   <body>
     <div id="header" class="ui container">
-      <h1 class="ui header">Pieter CI</h1>
+      <a class="ui header large" href="./index.html">Pieter CI</a>
       <hr>
     </div>
 
@@ -19,22 +19,23 @@
       </div>
 
       <div id="repo-scenario-template">
-        <div class="ui white label">${scenario}</div>
+        <span class="ui white label">${scenario}</span>
       </div>
 
+      <!-- Repos view template -->
       <div id="repos-repo-template">
         <div id="repo-${name}" class="column">
           <div class="ui segments repo">
             <div class="ui segment">
-              <p><i class="folder open icon"></i>&nbsp;<a class="ui header large" href="#" onclick="hideRepos(); displayRepo('${name}');">${name}</a></p>
-              <p><i class="setting icon"></i>&nbsp;<a href="#">${latest_job}&nbsp;</a></p>
+              <p><i class="folder open icon"></i>&nbsp;<a class="ui header" href="#" onclick="hideRepos(); displayRepo('${name}');">${name}</a></p>
             </div>
-            <div id="repo-${name}-scenarios" class="ui segment scenarios"></div>
+            <div id="repo-${name}-scenarios" class="ui segment scenarios"><i class="setting icon"></i></div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Single repo view template -->
     <div id="repo" class="ui three column grid container">
       <div id="repo-loading" class="column">
         <div class="ui loading segment">
@@ -45,7 +46,20 @@
       <div id="repo-template">
         <div class="column">
           <div class="ui segment">
-            <p>Hey</p>
+            <p><i class="folder open icon"></i>&nbsp;<span class="ui header large">${name}</span></p>
+            <p><i class="github icon"></i>&nbsp;<code>${source}</code></p>
+            <p><i class="setting icon"></i>&nbsp;<code>${latest_job}</code></p>
+            <div class="repo-job">
+              <div class="ui warning message hidden repo-job-message"></div>
+              <div class="ui segment hidden repo-job-stderr-container">
+                <div class="ui top attached label">stderr</div>
+                <pre class="repo-job-stderr"></pre>
+              </div>
+              <div class="ui segment hidden repo-job-stdout-container">
+                <div class="ui top attached label">stdout</div>
+                <pre class="repo-job-stdout"></pre>
+              </div>
+            </div>
           </div>
         </div>
       </div>

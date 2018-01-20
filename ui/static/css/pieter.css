@@ -2,8 +2,12 @@ div#header {
   padding: 32px 0px 32px 0px;
 }
 
+div#repos, div#repo {
+  margin-top: -1rem;
+}
+
 div.repo {
-  min-height: 140px;
+  min-height: 110px;
 }
 
 div#repos-repo-template,
@@ -11,4 +15,8 @@ div#repo-scenario-template,
 div#repo,
 div#repo-template {
   display: none;
+}
+
+div.repo-job div pre {
+  white-space: pre-wrap;
 }

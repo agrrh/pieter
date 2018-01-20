@@ -1,4 +1,4 @@
-var api_url = 'https://pieter.agrrh.com/api/v1';
+var api_url = 'https://pieter.agrrh.com/api/v1/';
 
 var api = {
   'get followers' : '/followers/{id}?results={count}',
@@ -14,8 +14,6 @@ $('.button')
 ;
 
 var repos = [];
-
-console.log('Hello');
 
 $( document ).ready(function() {
   hideLoading();
@@ -37,6 +35,15 @@ function displayRepo(repo) {
     console.log(data);
     $("#repo-loading").hide();
     $('#repo-template').tmpl(data).appendTo('#repo');
+    $.get(api_url + "jobs/" + data['latest_job'], function(data) {
+      $(".repo-job-stdout").append(data['stdout']);
+      $(".repo-job-stderr").append(data['stderr']);
+    }).fail(function() {
+      $(".repo-job-message").show();
+      $(".repo-job-stdout-container").hide();
+      $(".repo-job-stderr-container").hide();
+      $(".repo-job-message").append('Job not found.');
+    });
   });
 }
 
